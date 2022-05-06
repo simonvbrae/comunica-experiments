@@ -1,0 +1,22 @@
+{
+  "name": "cardinalitycountertest",
+  "version": "0.0.1",
+  "description": "",
+  "main": "bin/app",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc && node bin/app.js",
+    "build": "tsc",
+    "enhance": "ldbc-snb-enhancer ./config.json"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "next",
+    "n3": "https://github.com/rdfjs/N3.js#main",
+    "rdf-data-factory": "https://github.com/rubensworks/rdf-data-factory.js#master"
+  },
+  "devDependencies": {
+    "@types/n3": "latest"
+  }
+}

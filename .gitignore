@@ -1,0 +1,6 @@
+/pods/
+/dist/
+/oldstuff/
+/node_modules/
+/cardinalities/
+/package-lock.json
