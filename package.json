@@ -1,22 +1,17 @@
 {
-  "name": "cardinalitycountertest",
+  "name": "comunica-playground",
   "version": "0.0.1",
-  "description": "",
-  "main": "bin/app",
+  "description": "Testing things with Comunica",
   "type": "module",
   "scripts": {
     "dev": "tsc && node bin/app.js",
+    "query": "node bin/app.js",
     "build": "tsc",
     "enhance": "ldbc-snb-enhancer ./config.json"
   },
-  "author": "",
+  "author": "surilindur",
   "license": "MIT",
   "dependencies": {
-    "typescript": "next",
-    "n3": "https://github.com/rdfjs/N3.js#main",
-    "rdf-data-factory": "https://github.com/rubensworks/rdf-data-factory.js#master"
-  },
-  "devDependencies": {
-    "@types/n3": "latest"
+    "typescript": "latest"
   }
 }

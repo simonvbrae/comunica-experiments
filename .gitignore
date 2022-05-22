@@ -1,6 +1,14 @@
-/pods/
-/dist/
-/oldstuff/
-/node_modules/
-/cardinalities/
-/package-lock.json
+# Local test data
+/data/
+
+# Package lock files and NPM packages
+yarn.lock
+package-lock.json
+node_modules/
+
+# Components.js auto-generated files
+components/
+
+# TypeScript compiler products
+**/lib/*.d.ts
+**/lib/*.js

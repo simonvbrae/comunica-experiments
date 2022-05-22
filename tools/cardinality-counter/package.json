@@ -1,0 +1,29 @@
+{
+  "name": "cardinality-counter",
+  "version": "0.0.1",
+  "description": "Tool to calculate cardinalities for pods",
+  "main": "bin/cardinality-counter.js",
+  "scripts": {
+    "build": "npm run build:ts",
+    "build:ts": "node \"../../node_modules/typescript/bin/tsc\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/surilindur/comunica-playground.git"
+  },
+  "author": "surilindur",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/surilindur/comunica-playground/issues"
+  },
+  "homepage": "https://github.com/surilindur/comunica-playground#readme",
+  "dependencies": {
+    "rdf-js": "latest",
+    "n3": "https://github.com/rdfjs/N3.js#main",
+    "rdf-data-factory": "https://github.com/rubensworks/rdf-data-factory.js#master"
+  },
+  "devDependencies": {
+    "@types/n3": "latest",
+    "@types/node": "latest"
+  }
+}
