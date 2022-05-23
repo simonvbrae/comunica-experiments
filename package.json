@@ -1,17 +1,22 @@
 {
-  "name": "comunica-playground",
-  "version": "0.0.1",
+  "name": "comunica-experiments",
+  "version": "0.0.0",
+  "private": true,
   "description": "Testing things with Comunica",
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "tools/*"
+  ],
   "scripts": {
-    "dev": "tsc && node bin/app.js",
-    "query": "node bin/app.js",
-    "build": "tsc",
-    "enhance": "ldbc-snb-enhancer ./config.json"
+    "build": "yarn workspaces run build",
+    "query": "node tools/query-runner/bin/query-runner.js",
+    "calculate": "node tools/cardinality-counter/bin/cardinality-counter.js"
   },
   "author": "surilindur",
   "license": "MIT",
-  "dependencies": {
-    "typescript": "latest"
+  "devDependencies": {
+    "typescript": "latest",
+    "componentsjs-generator": "latest"
   }
 }

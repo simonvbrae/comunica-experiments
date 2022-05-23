@@ -1,16 +1,15 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
+    "esModuleInterop": false,
     "lib": ["esnext", "dom"],
     "module": "esnext",
     "preserveConstEnums": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "strict": true,
     "sourceMap": true,
     "target": "esnext",
-    "types": ["node"],
-    "outDir": "dist"
+    "types": ["node"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["tools/*/lib/*.ts"],
   "exclude": ["node_modules"]
 }

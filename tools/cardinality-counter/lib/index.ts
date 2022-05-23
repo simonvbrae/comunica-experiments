@@ -1,2 +1,2 @@
-export * from './CardinalityCounter'
-export * from './HelperFunctions'
+export * from './CardinalityCounter.js'
+export * from './HelperFunctions.js'

@@ -26,6 +26,8 @@ export class ActorRdfMetadataExtractContextCardinality extends ActorRdfMetadataE
       const quad: RDF.Quad = action.context.getSafe(KeysQueryOperation.operation) as RDF.Quad
       const estimate: number = cardinalities.get(quad.predicate.value) ?? Number.POSITIVE_INFINITY
 
+      //console.log(`Cardinality: ${quad.predicate.value} -> ${estimate}`)
+
       resolve({ metadata: { cardinality: { type: 'estimate', value: estimate } } })
     })
   }

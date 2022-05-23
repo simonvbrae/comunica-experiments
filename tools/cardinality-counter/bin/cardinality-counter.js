@@ -1,4 +1,4 @@
-import { testCardinalitiesByPod } from '../lib/index'
-import { cardinalitiesPath, podsPath } from '../../../templates/config-cardinality-counter.json'
+import { calculateCardinalitiesByPod } from '../lib/index.js'
+import config from './cardinality-counter.json' assert { type: 'json' }
 
-testCardinalitiesByPod(cardinalitiesPath, podsPath)
+calculateCardinalitiesByPod(config.cardinalitiesPath, config.podsPath)

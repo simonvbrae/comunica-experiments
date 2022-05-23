@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Tool to calculate cardinalities for pods",
   "main": "bin/cardinality-counter.js",
+  "type": "module",
   "scripts": {
     "build": "npm run build:ts",
     "build:ts": "node \"../../node_modules/typescript/bin/tsc\""

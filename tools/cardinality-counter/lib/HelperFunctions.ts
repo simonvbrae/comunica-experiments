@@ -1,15 +1,23 @@
 'use strict'
 
-import { getCardinalities, serializeCardinalities } from './CardinalityCounter'
-import { join } from 'node:path'
-import { readdirSync } from 'node:fs'
+import { getCardinalities, serializeCardinalities } from './CardinalityCounter.js'
+import { join, resolve } from 'node:path'
+import { readdirSync, existsSync, mkdirSync, rmSync } from 'node:fs'
 import { WriterOptions } from 'n3'
 
-function testCardinalitiesByPod(cardinalitiesPath: string, podsPath: string) {
-  console.log(`Pods path: ${podsPath}`)
-  console.log(`Cardinalities path: ${cardinalitiesPath}`)
+function calculateCardinalitiesByPod(cardinalitiesPath: string, podsPath: string) {
+  console.log(`Pods: ${resolve(podsPath)}`)
+  console.log(`Cardinalities: ${resolve(cardinalitiesPath)}`)
+
+  if (existsSync(cardinalitiesPath)) {
+    console.log(`Deleting old cardinalities`)
+    rmSync(cardinalitiesPath, { force: true, recursive: true })
+  }
+  mkdirSync(cardinalitiesPath)
+
   const writerOptions: WriterOptions = { format: 'N-Quads' }
   const pods: Array<string> = readdirSync(podsPath)
+
   console.log(`Reading pods from: ${podsPath}`)
 
   const handlePod = function (podName: string) {
@@ -27,4 +35,4 @@ function testCardinalitiesByPod(cardinalitiesPath: string, podsPath: string) {
   handlePod(pods.at(-1) || '')
 }
 
-export { testCardinalitiesByPod }
+export { calculateCardinalitiesByPod }

@@ -1,5 +1,5 @@
 # Local test data
-/data/
+/cardinalities/
 
 # Package lock files and NPM packages
 yarn.lock
@@ -12,3 +12,4 @@ components/
 # TypeScript compiler products
 **/lib/*.d.ts
 **/lib/*.js
+**/lib/*.js.map
