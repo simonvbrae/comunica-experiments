@@ -12,6 +12,7 @@
     "query": "node tools/query-runner/bin/query-runner.js",
     "index": "node tools/index-generator/bin/index-generator.js",
     "generate": "NODE_OPTIONS=--max-old-space-size=8192 solidbench generate",
+    "lint": "eslint . --ext .ts --max-warnings 0",
     "serve": "solidbench serve",
     "clean": "rm -rf ./out-*"
   },
