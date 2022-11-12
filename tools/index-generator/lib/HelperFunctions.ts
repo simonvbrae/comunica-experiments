@@ -1,5 +1,3 @@
-'use strict'
-
 import { getCardinalities, serializeCardinalities } from './CardinalityCounter.js'
 import { join, resolve } from 'node:path'
 import { readdirSync, existsSync, mkdirSync, rmSync } from 'node:fs'
@@ -20,19 +18,19 @@ function calculateCardinalitiesByPod(cardinalitiesPath: string, podsPath: string
 
   console.log(`Reading pods from: ${podsPath}`)
 
-  const handlePod = function (podName: string) {
-    getCardinalities(join(podsPath, podName)).then((cardinalityData) => {
-      serializeCardinalities(cardinalitiesPath, podName, cardinalityData, writerOptions).then((path) => {
-        console.log(`Wrote for pod ${podName} to ${path}`)
-        pods.pop()
-        if (pods.length > 0) {
-          handlePod(pods.at(-1) || '')
-        }
+  const podPromises: Promise<void>[] = pods.map(
+    (podName) =>
+      new Promise((resolve, reject) => {
+        getCardinalities(join(podsPath, podName)).then((cardinalityData) => {
+          serializeCardinalities(cardinalitiesPath, podName, cardinalityData, writerOptions).then((path) => {
+            console.log(`Wrote for pod ${podName} to ${path}`)
+            resolve()
+          })
+        })
       })
-    })
-  }
+  )
 
-  handlePod(pods.at(-1) || '')
+  Promise.all(podPromises).then(() => console.log('Finished all pods!'))
 }
 
 export { calculateCardinalitiesByPod }

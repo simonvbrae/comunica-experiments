@@ -38,7 +38,7 @@ async function testQuery(configFile: string, queryFile: string, solidProfileUri:
         })
         .then((bindingsStream) => {
           bindingsStream
-            .on('data', (binding) => {
+            .on('data', (binding: any) => {
               count++
               /*
             for (const [key, value] of binding.entries.entries()) {

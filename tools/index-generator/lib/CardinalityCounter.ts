@@ -3,17 +3,19 @@
 import { NamedNode, Quad } from 'rdf-js'
 import { ParserOptions, WriterOptions, StreamParser, StreamWriter } from 'n3'
 import { DataFactory } from 'rdf-data-factory'
-import { readdir, lstat, Stats, ReadStream, createReadStream, WriteStream, createWriteStream } from 'node:fs'
+import { readdir, lstat, Stats, ReadStream, createReadStream, WriteStream, createWriteStream, copyFileSync, unlinkSync, existsSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { Readable } from 'node:stream'
 
 const factory: DataFactory = new DataFactory()
 const cardinalityPredicate: NamedNode = factory.namedNode('http://www.w3.org/2002/07/owl#cardinality')
 const rdfIntegerType: NamedNode = factory.namedNode('http://www.w3.org/2001/XMLSchema#string')
+const cardinalityIndexPredicate: NamedNode = factory.namedNode('http://example.org/terms#publicCardinalityIndex')
 const rdfFileExtensions: Set<string> = new Set(['.ttl', '.nt', '.nq'])
 
 class CardinalityData {
-  subject: Map<string, number> = new Map<string, number>()
+  // subject: Map<string, number> = new Map<string, number>()
+
   predicate: Map<string, number> = new Map<string, number>()
 
   //subject: Map<Quad_Subject, number> = new Map<Quad_Subject, number>()
@@ -22,16 +24,16 @@ class CardinalityData {
   //graph: Map<Quad_Graph, number> = new Map<Quad_Graph, number>()
 
   public merge(other: CardinalityData): void {
-    other.subject.forEach((value, key) => this.subject.set(key, (this.subject.get(key) ?? 0) + value))
+    //other.subject.forEach((value, key) => this.subject.set(key, (this.subject.get(key) ?? 0) + value))
     other.predicate.forEach((value, key) => this.predicate.set(key, (this.predicate.get(key) ?? 0) + value))
     //other.object.forEach((value, key) => this.object.set(key, (this.object.get(key) ?? 0) + value))
     //other.graph.forEach((value, key) => this.graph.set(key, (this.graph.get(key) ?? 0) + value))
   }
 
   public add(quad: Quad): void {
-    if (quad.subject.termType == 'NamedNode') {
+    /*if (quad.subject.termType == 'NamedNode') {
       this.subject.set(quad.subject.value, (this.subject.get(quad.subject.value) ?? 0) + 1)
-    }
+    }*/
 
     if (quad.predicate.termType == 'NamedNode') {
       this.predicate.set(quad.predicate.value, (this.predicate.get(quad.predicate.value) ?? 0) + 1)
@@ -42,15 +44,17 @@ class CardinalityData {
   }
 
   public size(): number {
-    return this.subject.size + this.predicate.size //+ this.object.size + this.graph.size
+    return /*this.subject.size +*/ this.predicate.size //+ this.object.size + this.graph.size
   }
 
   public *quads(): Generator<Quad> {
-    let graph: NamedNode = factory.namedNode('#subject')
+    /*let graph: NamedNode = factory.namedNode('#subject')
     for (const [quad, cardinality] of this.subject.entries()) {
       yield factory.quad(factory.namedNode(quad), cardinalityPredicate, factory.literal(cardinality.toString(), rdfIntegerType), graph)
     }
     graph = factory.namedNode('#predicate')
+    */
+    const graph = undefined
     for (const [quad, cardinality] of this.predicate.entries()) {
       yield factory.quad(factory.namedNode(quad), cardinalityPredicate, factory.literal(cardinality.toString(), rdfIntegerType), graph)
     }
@@ -114,7 +118,7 @@ function serializeCardinalities(path: string, prefix: string, cardinalityData: C
     //console.log(`Serializing: ${cardinalityData.size()} > ${path}`)
 
     const quads: Readable = new Readable({ objectMode: true })
-    const filePath: string = join(path, `${prefix}.nt`)
+    const filePath: string = join(path, `${prefix}.nq`)
     const stream: WriteStream = createWriteStream(filePath)
     const writer: StreamWriter = new StreamWriter(writerOptions)
 
@@ -132,4 +136,20 @@ function serializeCardinalities(path: string, prefix: string, cardinalityData: C
   })
 }
 
-export { getCardinalities, serializeCardinalities, CardinalityData }
+function addCardinalitiesToPod(cardinalitiesFilePath: string, podName: string, podPath: string): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const cardinalitiesCopyTarget: string = join(podPath, 'profile', 'cardinalities.nq')
+    if (existsSync(cardinalitiesCopyTarget)) {
+      unlinkSync(cardinalitiesCopyTarget)
+    }
+    copyFileSync(cardinalitiesFilePath, cardinalitiesCopyTarget)
+    const cardinalityTuple: Quad = factory.quad(
+      factory.namedNode(`http://localhost:3000/pods/${podName}/profile/card#me`),
+      cardinalityIndexPredicate,
+      factory.namedNode(`http://localhost:3000/pods/${podName}/profile/cardinalities`)
+    )
+    // TODO: add to the profile
+  })
+}
+
+export { getCardinalities, serializeCardinalities, addCardinalitiesToPod, CardinalityData }

@@ -1,5 +1,23 @@
-import { testQuery } from '../lib/index.js'
-import configs from './query-runner.json' assert { type: 'json' }
+import { testQuery } from '../lib/Query.js'
+
+const configs = {
+  /*
+  'normal': {
+    config: 'templates/config-query.json',
+    query: '../ldbc-snb-decentralized.js/out-queries/interactive-short-1.sparql',
+    profile: 'http://localhost:3000/pods/00000000000000000065/profile/card',
+    cardinality: 'cardinalities/00000000000000000065.nt',
+    pod: '00000000000000000065'
+  },
+  */
+  'with-cardinality': {
+    config: 'templates/config-query-cardinalities.json',
+    query: '../ldbc-snb-decentralized.js/out-queries/interactive-short-1.sparql',
+    profile: 'http://localhost:3000/pods/00000000000000000065/profile/card',
+    cardinality: 'cardinalities/00000000000000000065.nt',
+    pod: '00000000000000000065'
+  }
+}
 
 const executionTimes = new Map()
 const repeat = 3

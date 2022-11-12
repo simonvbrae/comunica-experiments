@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "description": "Small program to run queries",
   "main": "bin/query-runner.js",
-  "type": "module",
   "scripts": {
     "build": "npm run build:ts",
     "build:ts": "node \"../../node_modules/typescript/bin/tsc\""
@@ -19,11 +18,11 @@
   },
   "homepage": "https://github.com/surilindur/comunica-playground#readme",
   "dependencies": {
-    "n3": "https://github.com/rdfjs/N3.js#main",
-    "@comunica/query-sparql-link-traversal-solid": "next",
+    "n3": "^1.16.2",
+    "@comunica/query-sparql-link-traversal-solid": "^0.0.2-alpha.6.0",
     "@comunica/actor-rdf-metadata-extract-context-cardinality": "file:../../packages/actor-rdf-metadata-extract-context-cardinality"
   },
   "devDependencies": {
-    "@types/n3": "latest"
+    "@types/n3": "^1.10.4"
   }
 }
