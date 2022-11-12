@@ -107,12 +107,15 @@ export class ActorExtractLinksCardinalityIndex extends ActorExtractLinks {
 
     // Collect links per type
     const cardinalityMap: Map<string, number> = new Map<string, number>()
+
     for (const bindings of bindingsArray) {
-      const type = bindings.get('id').value
-      if (type) {
-        cardinalityMap.set(type, parseInt(bindings.get('cardinality').value, 10))
+      const id: string | undefined = bindings.get('id')?.value
+      const cardinality: string | undefined = bindings.get('cardinality')?.value
+      if (id && cardinality) {
+        cardinalityMap.set(id, parseInt(cardinality, 10))
       }
     }
+
     return cardinalityMap
   }
 }

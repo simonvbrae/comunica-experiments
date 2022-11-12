@@ -1,4 +1,3 @@
 {
-  "podsPath": "../ldbc-snb-decentralized.js/out-fragments/http/localhost_3000/pods",
-  "cardinalitiesPath": "cardinalities"
+  "podsPath": "out-fragments/http/localhost_3000/pods"
 }

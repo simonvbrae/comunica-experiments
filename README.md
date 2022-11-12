@@ -22,7 +22,7 @@ yarn run build
 yarn run index
 ```
 
-The tool will generate, by default, `profile/cardinalities.ttl` file under each pod, and create a link to it in the WebID document. The document contains some data about the predicate counts, as well as the overall triple count inside a pod, and unique predicates and subjects. For example:
+The tool will generate, by default, `profile/cardinalities.ttl` file under each pod, and create a link to it in the WebID document. The document contains some data about the predicate counts, as well as the overall triple count inside a pod, and unique predicates and subjects. The document uses [the VoID vocabulary](https://www.w3.org/TR/void/). For example:
 
 ```
 @prefix void: <http://rdfs.org/ns/void#>.
