@@ -12,12 +12,12 @@ export class ActorRdfMetadataExtractContextCardinality extends ActorRdfMetadataE
     super(args)
   }
 
-  public async test(action: IActionRdfMetadataExtract): Promise<IActorTest> {
+  public async test(/*action: IActionRdfMetadataExtract*/): Promise<IActorTest> {
     return true
   }
 
   public run(action: IActionRdfMetadataExtract): Promise<IActorRdfMetadataExtractOutput> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve/*, reject*/) => {
       // The cardinalities data is assumed to be found in the context, for testing purposes only
       const cardinalities: Map<string, number> = action.context.getSafe<Map<string, number>>(new ActionContextKey<Map<string, number>>('cardinalities'))
       //console.log(`Total ${cardinalities.size} entries`)

@@ -3,7 +3,7 @@ import { Parser } from 'n3'
 import { readFileSync } from 'node:fs'
 
 async function testQuery(configFile: string, queryFile: string, solidProfileUri: string, cardinalityFilePath: string): Promise<number> {
-  return new Promise<number>((resolve, reject) => {
+  return new Promise<number>((resolve/*, reject*/) => {
     console.log(`Config: ${configFile}`)
     console.log(`Query: ${queryFile}`)
     console.log(`Profile: ${solidProfileUri}`)
@@ -38,7 +38,7 @@ async function testQuery(configFile: string, queryFile: string, solidProfileUri:
         })
         .then((bindingsStream) => {
           bindingsStream
-            .on('data', (binding: any) => {
+            .on('data', () => {
               count++
               /*
             for (const [key, value] of binding.entries.entries()) {
