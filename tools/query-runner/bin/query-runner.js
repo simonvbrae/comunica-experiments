@@ -1,32 +1,23 @@
-import { testQuery } from '../lib/Query.js'
-
-const configs = {
-  /*
-  'normal': {
-    config: 'templates/config-query.json',
-    query: '../ldbc-snb-decentralized.js/out-queries/interactive-short-1.sparql',
-    profile: 'http://localhost:3000/pods/00000000000000000065/profile/card',
-    cardinality: 'cardinalities/00000000000000000065.nt',
-    pod: '00000000000000000065'
-  },
-  */
-  'with-cardinality': {
-    config: 'templates/config-query-cardinalities.json',
-    query: '../ldbc-snb-decentralized.js/out-queries/interactive-short-1.sparql',
-    profile: 'http://localhost:3000/pods/00000000000000000065/profile/card',
-    cardinality: 'cardinalities/00000000000000000065.nt',
-    pod: '00000000000000000065'
-  }
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const node_path_1 = require("node:path");
+const node_fs_1 = require("node:fs");
+const Query_1 = require("../lib/Query");
+function loadConfiguration(path) {
+    const configData = JSON.parse((0, node_fs_1.readFileSync)(path, 'utf8'));
+    for (const config of configData) {
+        config.config = (0, node_path_1.resolve)(config.config);
+        config.query = (0, node_path_1.resolve)(config.query);
+    }
+    return configData;
 }
-
-const executionTimes = new Map()
-const repeat = 3
-
-for (let i = 0; i < repeat; i++) {
-  for (const [name, configuration] of Object.entries(configs)) {
-    const duration = await testQuery(configuration.config, configuration.query, configuration.profile, configuration.cardinality)
-    executionTimes.set(name, [...(executionTimes.get(name) ?? []), duration])
-  }
+async function runQueryBasedOnConfiguration(config) {
+    await (0, Query_1.executeQuery)(config.config, config.query, config.seed);
+    console.log('Finished running');
 }
-
-console.log(executionTimes)
+const configPath = (0, node_path_1.join)('templates', 'config-query-runner.json');
+const configs = loadConfiguration(configPath);
+runQueryBasedOnConfiguration(configs[0])
+    .then(() => console.log('Success!'))
+    .catch((reason) => console.log('Fail!', reason));
+//# sourceMappingURL=query-runner.js.map

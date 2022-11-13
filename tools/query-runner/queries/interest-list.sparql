@@ -1,4 +1,0 @@
-SELECT ?s ?p ?o WHERE {
-  ?s <http://localhost:3000/www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/hasInterest> ?o.
-  ?s ?p ?o
-} LIMIT 100

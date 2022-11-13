@@ -1,7 +1,8 @@
 {
   "name": "query-runner",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "Small program to run queries",
+  "private": true,
   "main": "bin/query-runner.js",
   "scripts": {
     "build": "npm run build:ts",
@@ -9,20 +10,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/surilindur/comunica-playground.git"
+    "url": "git+https://github.com/surilindur/comunica-experiments.git"
   },
   "author": "surilindur",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/surilindur/comunica-playground/issues"
+    "url": "https://github.com/surilindur/comunica-experiments/issues"
   },
-  "homepage": "https://github.com/surilindur/comunica-playground#readme",
+  "homepage": "https://github.com/surilindur/comunica-experiments#readme",
   "dependencies": {
-    "n3": "^1.16.2",
     "@comunica/query-sparql-link-traversal-solid": "^0.0.2-alpha.6.0",
-    "@comunica/actor-rdf-metadata-extract-context-cardinality": "file:../../packages/actor-rdf-metadata-extract-context-cardinality"
-  },
-  "devDependencies": {
-    "@types/n3": "^1.10.4"
+    "@comunica/actor-rdf-metadata-extract-cardinality": "file:../../packages/actor-rdf-metadata-extract-cardinality"
   }
 }

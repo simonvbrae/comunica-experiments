@@ -1,61 +1,32 @@
 import { QueryEngine, QueryEngineFactory } from '@comunica/query-sparql-link-traversal-solid'
-import { Parser } from 'n3'
-import { readFileSync } from 'node:fs'
+// import { readFileSync } from 'node:fs'
 
-async function testQuery(configFile: string, queryFile: string, solidProfileUri: string, cardinalityFilePath: string): Promise<number> {
-  return new Promise<number>((resolve/*, reject*/) => {
-    console.log(`Config: ${configFile}`)
-    console.log(`Query: ${queryFile}`)
-    console.log(`Profile: ${solidProfileUri}`)
-    console.log(`Cardinality: ${cardinalityFilePath}`)
+async function executeQuery(configPath: string, queryPath: string, seedUrl: string): Promise<void> {
+  console.log(`Execute query from ${queryPath}`)
+  console.log(`Using configuration at ${configPath}`)
+  console.log(`With seed URL: ${seedUrl}`)
 
-    const queryEngineFactory: QueryEngineFactory = new QueryEngineFactory()
+  const queryEngineFactory: QueryEngineFactory = new QueryEngineFactory()
 
-    const query: string = readFileSync(queryFile).toString().split('\n\n')[0]
+  // const queries: string[] = readFileSync(queryPath, 'utf8').split('}\n\n').map((query) => query + '}\n')
+  const queries: string[] = [
+    'SELECT * WHERE { ?s ?p ?o } LIMIT 10'
+  ]
 
-    const parser: Parser = new Parser()
-    const cardinalityFileContents: string = readFileSync(cardinalityFilePath).toString()
-    const cardinalityData: Map<string, number> = new Map<string, number>()
+  const queryEngine: QueryEngine = await queryEngineFactory.create({ configPath: configPath })
 
-    parser.parse(cardinalityFileContents, (error, quad) => {
-      if (error) {
-        throw error
-      }
-      if (quad) {
-        //console.log(quad.toJSON())
-        cardinalityData.set(quad.subject.value, parseInt(quad.object.value, 10))
-      }
-    })
+  for (const query of queries) {
+    // console.log(`Execute query:\n\n${query}\n`)
 
-    queryEngineFactory.create({ configPath: configFile }).then((queryEngine: QueryEngine) => {
-      const startTimeApprox: Date = new Date()
-      let count = 0
+    const approximateStartTime: Date = new Date()
+    const results = await (await queryEngine.queryBindings(query, { sources: [ seedUrl ], lenient: true })).toArray()
+    const approximateEndTime: Date = new Date()
+    const approximateDuration: number = approximateEndTime.getTime() - approximateStartTime.getTime()
+  
+    console.log(`Query took approximately ${approximateDuration} ms and produced ${results.length} triples`)
+  }
 
-      queryEngine
-        .queryBindings(query, {
-          sources: [solidProfileUri],
-          cardinalities: cardinalityData
-        })
-        .then((bindingsStream) => {
-          bindingsStream
-            .on('data', () => {
-              count++
-              /*
-            for (const [key, value] of binding.entries.entries()) {
-              console.log(`${key}: ${value.value}`)
-            }
-            console.log()
-            */
-            })
-            .on('end', () => {
-              const endTimeApprox: Date = new Date()
-              const totalMilliseconds: number = endTimeApprox.getTime() - startTimeApprox.getTime()
-              console.log(`Finished in approximately ${totalMilliseconds} ms, ${count} results`)
-              resolve(totalMilliseconds)
-            })
-        })
-    })
-  })
+  console.log('Finished')
 }
 
-export { testQuery }
+export { executeQuery }

@@ -1,0 +1,12 @@
+[
+  {
+    "config": "templates/config-query.json",
+    "query": "out-queries/interactive-short-1.sparql",
+    "seed": "http://localhost:3000/pods/00000000000000000065/profile/card"
+  },
+  {
+    "config": "templates/config-query-cardinalities.json",
+    "query": "out-queries/interactive-short-1.sparql",
+    "seed": "http://localhost:3000/pods/00000000000000000065/profile/card"
+  }
+]

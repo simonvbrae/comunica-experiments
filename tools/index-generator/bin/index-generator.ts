@@ -1,9 +1,14 @@
 import { processPods } from '../lib'
-import { resolve } from 'node:path'
-import { podsPath } from './index-generator.json'
+import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 
-const path: string = resolve(podsPath)
+interface IConfiguration {
+    pods: string
+}
 
-console.log(`Processing pods from ${path}`)
+const configPath: string = join('templates', 'config-index-generator.json')
+const config: IConfiguration = JSON.parse(readFileSync(configPath, 'utf8')) as IConfiguration
 
-processPods(path)
+console.log(`Processing pods from ${config.pods}`)
+
+processPods(config.pods)
