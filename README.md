@@ -49,6 +49,12 @@ For the purposes of using the cardinality indexes when querying, there is the `A
 
 The query runner tool in [tools/query-runner](tools/query-runner/) attempts to automatically include this actor, by creating the query engine using [templates/config-query-cardinalities.json](templates/config-query-cardinalities.json) that should pull in the actor.
 
+Running the query tool should work with:
+
+```
+yarn run query
+```
+
 TODO: The Solid part of the configurations attempts to force login, even when not needed. Need to fix it.
 
 ## Benchmarking with and without cardinality indexes
