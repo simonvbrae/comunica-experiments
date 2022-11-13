@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
 
 interface IConfiguration {
-    pods: string
+  pods: string
 }
 
 const configPath: string = join('templates', 'config-index-generator.json')
