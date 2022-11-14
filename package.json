@@ -10,6 +10,7 @@
   "scripts": {
     "build": "yarn workspaces run build",
     "query": "node tools/query-runner/bin/query-runner.js",
+    "query-cli": "node node_modules/@comunica/query-sparql-link-traversal-solid/bin/query.js http://localhost:3000/pods/00000000000000000065/profile/card --query 'SELECT * { ?s ?p ?o } LIMIT 10' --idp void",
     "index": "node tools/index-generator/bin/index-generator.js",
     "generate": "NODE_OPTIONS=--max-old-space-size=8192 solidbench generate",
     "lint": "eslint . --ext .ts --max-warnings 0",

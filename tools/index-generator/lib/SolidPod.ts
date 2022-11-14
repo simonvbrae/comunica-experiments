@@ -6,8 +6,9 @@ import { DataFactory } from 'rdf-data-factory'
 
 const factory: DataFactory = new DataFactory()
 
-const defaultCustomIndexFile = 'cardinalities.ttl'
-const defaultCustomIndexFormat = 'text/turtle'
+const defaultCustomIndexFile = 'cardinalities.nq'
+const defaultProfileFormat = 'application/n-quads'
+const defaultCustomIndexFormat = 'application/n-quads'
 
 const predicates: Record<string, NamedNode> = {
   xsInteger: factory.namedNode('http://www.w3.org/2001/XMLSchema#integer'),
@@ -21,19 +22,6 @@ const predicates: Record<string, NamedNode> = {
   rdfType: factory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
   voidDataset: factory.namedNode('http://rdfs.org/ns/void#Dataset'),
   rdfsSeeAlso: factory.namedNode('http://www.w3.org/2000/01/rdf-schema#seeAlso')
-}
-
-const defaultPrefixes: Record<string, string> = {
-  'void': 'http://rdfs.org/ns/void#',
-  'xs': 'http://www.w3.org/2001/XMLSchema#',
-  'dbpr': 'http://localhost:3000/dbpedia.org/resource',
-  'ldbct': 'http://localhost:3000/www.ldbc.eu/ldbc_socialnet/1.0/tag',
-  'ldbcv': 'http://localhost:3000/www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/',
-  'solid': 'http://www.w3.org/ns/solid/terms#',
-  'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-  'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
-  'pim': 'http://www.w3.org/ns/pim/space#',
-  'internal': 'http://localhost:3000/internal/'
 }
 
 interface ISolidPod {
@@ -132,7 +120,7 @@ class SolidPod implements ISolidPod {
         unlinkSync(outputPath)
       }
 
-      const writer: Writer = new Writer({ prefixes: defaultPrefixes, format: defaultCustomIndexFormat })
+      const writer: Writer = new Writer({ format: defaultCustomIndexFormat })
 
       writer.addQuad(dataset, predicates.rdfType, predicates.voidDataset)
       writer.addQuad(dataset, predicates.voidTriples, factory.literal(this.tripleCount.toString(), predicates.xsInteger))
@@ -168,7 +156,7 @@ class SolidPod implements ISolidPod {
       const target: NamedNode = factory.namedNode(pathIri.href)
 
       const parser: Parser = new Parser({ factory: factory })
-      const writer: Writer = new Writer()
+      const writer: Writer = new Writer({ format: defaultProfileFormat })
 
       readFile(profilePath, 'utf8', (err, data) => {
         if (err) {

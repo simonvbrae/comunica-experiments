@@ -25,6 +25,10 @@ async function runQueryBasedOnConfiguration(config: IQueryConfiguration): Promis
 const configPath: string = join('templates', 'config-query-runner.json')
 const configs: IQueryConfiguration[] = loadConfiguration(configPath)
 
+if (!process.argv.includes('--idp')) {
+  process.argv.push('--idp', 'void')
+}
+
 runQueryBasedOnConfiguration(configs[0])
   .then(() => console.log('Success!'))
   .catch((reason) => console.log('Fail!', reason))

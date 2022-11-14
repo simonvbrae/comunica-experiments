@@ -19,7 +19,7 @@ async function executeQuery(configPath: string, queryPath: string, seedUrl: stri
     // console.log(`Execute query:\n\n${query}\n`)
 
     const approximateStartTime: Date = new Date()
-    const results = await (await queryEngine.queryBindings(query, { sources: [ seedUrl ], lenient: true })).toArray()
+    const results = await (await queryEngine.queryBindings(query, { sources: [ seedUrl ], lenient: false, idp: 'void' })).toArray()
     const approximateEndTime: Date = new Date()
     const approximateDuration: number = approximateEndTime.getTime() - approximateStartTime.getTime()
   
