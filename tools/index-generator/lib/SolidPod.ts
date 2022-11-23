@@ -21,7 +21,7 @@ const predicates: Record<string, NamedNode> = {
   voidClassPartition: factory.namedNode('http://rdfs.org/ns/void#classPartition'),
   rdfType: factory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
   voidDataset: factory.namedNode('http://rdfs.org/ns/void#Dataset'),
-  rdfsSeeAlso: factory.namedNode('http://www.w3.org/2000/01/rdf-schema#seeAlso')
+  voidDatasetDescription: factory.namedNode('http://rdfs.org/ns/void#DatasetDescription')
 }
 
 interface ISolidPod {
@@ -151,7 +151,7 @@ class SolidPod implements ISolidPod {
       const profileIri: URL = new URL(`${this.url}/profile/card#me`)
       const pathIri: URL = new URL(path.replace(this.path.split('.')[0], this.url.href)) // split + [0] is to get rid of file extension... rip :d
 
-      const linkPredicate: NamedNode = predicate ?? predicates.rdfsSeeAlso
+      const linkPredicate: NamedNode = predicate ?? predicates.voidDatasetDescription
       const profile: NamedNode = factory.namedNode(profileIri.href)
       const target: NamedNode = factory.namedNode(pathIri.href)
 
