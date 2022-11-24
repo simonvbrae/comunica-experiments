@@ -46,7 +46,7 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
     if (!this.checkIfMetadataExistsForUrl(action.url)) {
       const voidMetadataDescriptions: string[] = await this.extractVoidDatasetDescriptionLinks(action.metadata)
       if (voidMetadataDescriptions.length > 0) {
-        console.log('Found metadata links:', action.url, voidMetadataDescriptions)
+        // console.log('Found metadata links:', action.url, voidMetadataDescriptions)
         await Promise.all(voidMetadataDescriptions.map((url) => this.dereferenceVoidDatasetDescription(url, action.context)))
       }
     }
