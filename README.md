@@ -59,4 +59,4 @@ There exists the `ActorRdfMetadataExtractVoidDescription` actor in `packages/` t
 yarn run query
 ```
 
-The query runner tool attempts to do some simple approximate timing of queries, just to get a rough estimate of the time it takes to execute one. By default, the configuration runs the same query both with and without the VOID description metadata extract actor, to provide some idea of whether the actor does anything.
+The query runner tool attempts to do some simple approximate timing of queries, just to get a rough estimate of the time it takes to execute one. The tool uses the default configuration in [templates/config-runner.json] by default, and runs each query on each config the number of times specified by repeat. The query durations are then averaged and eventually serialised in [templates/results.csv] for each combination. This is not necessarily a valid way to benchmark anything, it is just there to get some idea of how the configurations affect the query durations.
