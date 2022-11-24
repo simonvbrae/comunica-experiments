@@ -1,12 +1,12 @@
 import { type IActionRdfMetadataExtract, type IActorRdfMetadataExtractOutput, type IActorRdfMetadataExtractArgs, ActorRdfMetadataExtract } from '@comunica/bus-rdf-metadata-extract'
 import { type ActorInitQueryBase } from '@comunica/actor-init-query'
-import { QueryEngine } from '@comunica/query-sparql-link-traversal-solid'
+import { QueryEngineBase } from '@comunica/actor-init-query'
 import { type IActorTest } from '@comunica/core'
 import { MediatorDereferenceRdf } from '@comunica/bus-dereference-rdf'
 import { KeysQueryOperation, KeysInitQuery } from '@comunica/context-entries'
 import { storeStream } from 'rdf-store-stream'
 import * as RDF from '@rdfjs/types'
-import { IActionContext } from '@comunica/types'
+import { type IActionContext, type IQueryEngine } from '@comunica/types'
 
 /**
  * An RDF Metadata Extract Actor that extracts dataset metadata from their VOID descriptions
@@ -18,7 +18,7 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
   public readonly voidDatasetDescriptionPredicates: string[]
 
   private readonly voidDatasetDescriptionPredicatesSet: Set<string>
-  private readonly queryEngine: QueryEngine // this thing looks weird, nesting Comunica in itself...
+  private readonly queryEngine: IQueryEngine // this thing looks weird, nesting Comunica in itself...
 
   private static readonly predicateCardinalitiesByDataset: Map<string, Map<string, number>> = new Map<string, Map<string, number>>()
 
@@ -28,7 +28,7 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
     this.mediatorDereferenceRdf = args.mediatorDereferenceRdf
     this.voidDatasetDescriptionPredicates = args.voidDatasetDescriptionPredicates
     this.voidDatasetDescriptionPredicatesSet = new Set<string>(args.voidDatasetDescriptionPredicates)
-    this.queryEngine = new QueryEngine(args.actorInitQuery)
+    this.queryEngine = new QueryEngineBase(args.actorInitQuery)
   }
 
   public async test(action: IActionRdfMetadataExtract): Promise<IActorTest> {
@@ -46,6 +46,7 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
     if (!this.checkIfMetadataExistsForUrl(action.url)) {
       const voidMetadataDescriptions: string[] = await this.extractVoidDatasetDescriptionLinks(action.metadata)
       if (voidMetadataDescriptions.length > 0) {
+        console.log('Found metadata links:', action.url, voidMetadataDescriptions)
         await Promise.all(voidMetadataDescriptions.map((url) => this.dereferenceVoidDatasetDescription(url, action.context)))
       }
     }
