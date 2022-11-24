@@ -43,9 +43,11 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
 
   public async run(action: IActionRdfMetadataExtract): Promise<IActorRdfMetadataExtractOutput> {
     const quad: RDF.Quad = action.context.getSafe(KeysQueryOperation.operation) as RDF.Quad
-    const voidMetadataDescriptions: string[] = await this.extractVoidDatasetDescriptionLinks(action.metadata)
-    if (!this.checkIfMetadataExistsForUrl(action.url) && voidMetadataDescriptions.length > 0) {
-      await Promise.all(voidMetadataDescriptions.map((url) => this.dereferenceVoidDatasetDescription(url, action.context)))
+    if (!this.checkIfMetadataExistsForUrl(action.url)) {
+      const voidMetadataDescriptions: string[] = await this.extractVoidDatasetDescriptionLinks(action.metadata)
+      if (voidMetadataDescriptions.length > 0) {
+        await Promise.all(voidMetadataDescriptions.map((url) => this.dereferenceVoidDatasetDescription(url, action.context)))
+      }
     }
     return this.extractMetadataForPredicate(action.url, quad.predicate.value)
   }
