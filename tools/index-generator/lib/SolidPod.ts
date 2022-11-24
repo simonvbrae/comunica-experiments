@@ -1,4 +1,4 @@
-import { resolve, join, basename } from 'node:path'
+import { resolve, join, basename, extname } from 'node:path'
 import { readdirSync, lstatSync, createReadStream, ReadStream, writeFile, unlinkSync, existsSync, readFile } from 'node:fs'
 import { StreamParser, Parser, Writer } from 'n3'
 import { NamedNode, Quad } from 'rdf-js'
@@ -7,8 +7,8 @@ import { DataFactory } from 'rdf-data-factory'
 const factory: DataFactory = new DataFactory()
 
 const defaultCustomIndexFile = 'cardinalities.nq'
-const defaultProfileFormat = 'application/n-quads'
 const defaultCustomIndexFormat = 'application/n-quads'
+const defaultProfileFormat = 'application/n-quads'
 
 const predicates: Record<string, NamedNode> = {
   xsInteger: factory.namedNode('http://www.w3.org/2001/XMLSchema#integer'),
@@ -22,6 +22,19 @@ const predicates: Record<string, NamedNode> = {
   rdfType: factory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
   voidDataset: factory.namedNode('http://rdfs.org/ns/void#Dataset'),
   voidDatasetDescription: factory.namedNode('http://rdfs.org/ns/void#DatasetDescription')
+}
+
+const defaultPrefixes: Record<string, string> = {
+  'void': 'http://rdfs.org/ns/void#',
+  'xs': 'http://www.w3.org/2001/XMLSchema#',
+  'dbpr': 'http://localhost:3000/dbpedia.org/resource',
+  'ldbct': 'http://localhost:3000/www.ldbc.eu/ldbc_socialnet/1.0/tag',
+  'ldbcv': 'http://localhost:3000/www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/',
+  'solid': 'http://www.w3.org/ns/solid/terms#',
+  'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
+  'pim': 'http://www.w3.org/ns/pim/space#',
+  'internal': 'http://localhost:3000/internal/'
 }
 
 interface ISolidPod {
@@ -129,10 +142,9 @@ class SolidPod implements ISolidPod {
       writer.addQuad(dataset, predicates.voidProperties, factory.literal(this.predicates.size.toString(), predicates.xsInteger))
 
       for (const [iri, count] of this.predicates) {
-        writer.addQuad(dataset, predicates.voidPropertyPartition, writer.blank(
-          factory.namedNode(iri),
-          factory.literal(count.toString(), predicates.xsInteger)
-        ))
+        const propertyPartitionSubject = factory.blankNode()
+        writer.addQuad(dataset, predicates.voidPropertyPartition, propertyPartitionSubject)
+        writer.addQuad(propertyPartitionSubject, factory.namedNode(iri), factory.literal(count.toString(), predicates.xsInteger))
       }
 
       writer.end((err, result) => {
@@ -149,7 +161,7 @@ class SolidPod implements ISolidPod {
     return new Promise<void>((resolve, reject) => {
       const profilePath: string = join(this.path, 'profile', 'card.nq')
       const profileIri: URL = new URL(`${this.url}/profile/card#me`)
-      const pathIri: URL = new URL(path.replace(this.path.split('.')[0], this.url.href)) // split + [0] is to get rid of file extension... rip :d
+      const pathIri: URL = new URL(path.replace(this.path, this.url.href).replace(extname(path), ''))
 
       const linkPredicate: NamedNode = predicate ?? predicates.voidDatasetDescription
       const profile: NamedNode = factory.namedNode(profileIri.href)

@@ -1,0 +1,8 @@
+PREFIX dbo: <http://dbpedia.org/ontology/>
+
+SELECT ?movie ?entry ?value WHERE {
+    ?movie a dbo:Film ;
+        dbo:starring [
+            ?entry ?value
+        ] .
+}

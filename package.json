@@ -10,7 +10,10 @@
   "scripts": {
     "build": "yarn workspaces run build",
     "query": "node tools/query-runner/bin/query-runner.js",
-    "query-cli": "node node_modules/@comunica/query-sparql-link-traversal-solid/bin/query.js http://localhost:3000/pods/00000000000000000065/profile/card --query 'SELECT * { ?s ?p ?o } LIMIT 10' --idp void",
+    "query-cardinalities": "node node_modules/@comunica/query-sparql-link-traversal-solid/bin/query.js http://localhost:3000/pods/00000000000000000065/profile/card --file templates/sparql-cardinalities.rq --idp void",
+    "query-cardinalities-default": "node node_modules/@comunica/query-sparql/bin/query.js http://localhost:3000/pods/00000000000000000065/profile/cardinalities --file templates/sparql-cardinalities.rq",
+    "query-reference": "node node_modules/@comunica/query-sparql-link-traversal-solid/bin/query.js https://fragments.dbpedia.org/2016-04/en --file templates/sparql-reference.rq --idp void",
+    "query-reference-default": "node node_modules/@comunica/query-sparql/bin/query.js https://fragments.dbpedia.org/2016-04/en --file templates/sparql-reference.rq",
     "index": "node tools/index-generator/bin/index-generator.js",
     "generate": "NODE_OPTIONS=--max-old-space-size=8192 solidbench generate",
     "lint": "eslint . --ext .ts --max-warnings 0",

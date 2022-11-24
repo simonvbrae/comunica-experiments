@@ -1,5 +1,32 @@
 import { QueryEngine, QueryEngineFactory } from '@comunica/query-sparql-link-traversal-solid'
+import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+
+// import { KeysInitQuery } from '@comunica/context-entries'
 // import { readFileSync } from 'node:fs'
+// import { CliArgsHandlerSolidNoAuth } from './CliArgsHandlerSolidNoAuth'
+
+interface IQueryConfiguration {
+  config: string
+  query: string
+  seed: string
+}
+
+function loadConfiguration(path: string): IQueryConfiguration[] {
+  const configData: IQueryConfiguration[] = JSON.parse(readFileSync(path, 'utf8')) as IQueryConfiguration[]
+  for (const config of configData) {
+    config.config = resolve(config.config)
+    config.query = resolve(config.query)
+  }
+  return configData
+}
+
+async function executeQueriesFromConfiguration(configPath: string): Promise<void> {
+  const configurations: IQueryConfiguration[] = loadConfiguration(configPath)
+  for (const configuration of configurations) {
+    await executeQuery(configuration.config, configuration.query, configuration.seed)
+  }
+}
 
 async function executeQuery(configPath: string, queryPath: string, seedUrl: string): Promise<void> {
   console.log(`Execute query from ${queryPath}`)
@@ -19,7 +46,16 @@ async function executeQuery(configPath: string, queryPath: string, seedUrl: stri
     // console.log(`Execute query:\n\n${query}\n`)
 
     const approximateStartTime: Date = new Date()
-    const results = await (await queryEngine.queryBindings(query, { sources: [ seedUrl ], lenient: false, idp: 'void' })).toArray()
+
+    const results = await (await queryEngine.queryBindings(query, {
+      sources: [ seedUrl ],
+      lenient: false
+      /*
+      [KeysInitQuery.cliArgsHandlers.name]: [
+        new CliArgsHandlerSolidNoAuth()
+      ]*/
+    })).toArray()
+
     const approximateEndTime: Date = new Date()
     const approximateDuration: number = approximateEndTime.getTime() - approximateStartTime.getTime()
   
@@ -29,4 +65,4 @@ async function executeQuery(configPath: string, queryPath: string, seedUrl: stri
   console.log('Finished')
 }
 
-export { executeQuery }
+export { executeQueriesFromConfiguration }

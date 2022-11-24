@@ -1,10 +1,10 @@
 import { type IActionRdfMetadataExtract, type IActorRdfMetadataExtractOutput, type IActorRdfMetadataExtractArgs, ActorRdfMetadataExtract } from '@comunica/bus-rdf-metadata-extract'
-import { type ActorInitQueryBase, QueryEngineBase } from '@comunica/actor-init-query'
+import { type ActorInitQueryBase } from '@comunica/actor-init-query'
+import { QueryEngine } from '@comunica/query-sparql-link-traversal-solid'
 import { type IActorTest } from '@comunica/core'
-import { type IQueryEngine } from '@comunica/types'
 import { MediatorDereferenceRdf } from '@comunica/bus-dereference-rdf'
 import { KeysQueryOperation, KeysInitQuery } from '@comunica/context-entries'
-import { storeStream } from 'rdf-store-stream'
+// import { storeStream } from 'rdf-store-stream'
 import * as RDF from '@rdfjs/types'
 
 /**
@@ -15,13 +15,15 @@ export class ActorRdfMetadataExtractCardinality extends ActorRdfMetadataExtract 
   public readonly mediatorDereferenceRdf: MediatorDereferenceRdf
   public readonly actorInitQuery: ActorInitQueryBase
 
-  private readonly queryEngine: IQueryEngine // this thing looks weird, nesting Comunica in itself...
+  private readonly queryEngine: QueryEngine // this thing looks weird, nesting Comunica in itself...
 
   private static readonly predicateCardinalitiesByDataset: Map<string, Map<string, number>> = new Map<string, Map<string, number>>()
 
   public constructor(args: IActorRdfMetadataExtractCardinalityArgs) {
     super(args)
-    this.queryEngine = new QueryEngineBase(this.actorInitQuery)
+    this.actorInitQuery = args.actorInitQuery
+    this.mediatorDereferenceRdf = args.mediatorDereferenceRdf
+    this.queryEngine = new QueryEngine(args.actorInitQuery)
   }
 
   public async test(action: IActionRdfMetadataExtract): Promise<IActorTest> {
@@ -37,24 +39,36 @@ export class ActorRdfMetadataExtractCardinality extends ActorRdfMetadataExtract 
   public run(action: IActionRdfMetadataExtract): Promise<IActorRdfMetadataExtractOutput> {
     return new Promise((resolve, reject) => {
       const quad: RDF.Quad = action.context.getSafe(KeysQueryOperation.operation) as RDF.Quad
-      this.getCardinalityForPredicate(action, quad.predicate.value).then((cardinality) => {
-        resolve({ metadata: { cardinality: { type: 'estimate', value: cardinality } } })
-      }).catch(reject)
+      this.getCardinalityForPredicate(action, quad.predicate.value)
+        .then((cardinality) => {
+          resolve({ metadata: { cardinality: { type: 'estimate', value: cardinality } } })
+        })
+        .catch((reason) => {
+          console.log(reason)
+          reject(reason)
+        })
     })
   }
 
   private async getCardinalityForPredicate(action: IActionRdfMetadataExtract, predicate: string): Promise<number> {
-    if (!this.cardinalityDataExistsForUrl(action.url)) {
-      await this.retrieveCardinalityDataForDataset(action)
-    }
-    return this.extractCardinalityforPredicate(action.url, predicate)
+    return new Promise<number>((resolve, reject) => {
+      if (!this.cardinalityDataExistsForUrl(action.url)) {
+        this.retrieveCardinalityDataForDataset(action)
+          .then(() => resolve(this.extractCardinalityforPredicate(action.url, predicate)))
+          .catch((reason) => {
+            console.log(reason)
+            reject(reason)
+          })
+      }
+      resolve(this.extractCardinalityforPredicate(action.url, predicate))
+    })
   }
 
   private async retrieveCardinalityDataForDataset(action: IActionRdfMetadataExtract): Promise<void> {
-    console.log('Attempt to dereference:', action.url)
+    // console.log('Attempt to dereference:', action.url)
 
-    const response = await this.mediatorDereferenceRdf.mediate({ url: action.url, context: action.context })
-    const store = await storeStream(response.data)
+    //const response = await this.mediatorDereferenceRdf.mediate({ url: action.url, context: action.context })
+    //const store = await storeStream(response.data)
 
     const query = `
       PREFIX void: <http://rdfs.org/ns/void#>
@@ -67,11 +81,11 @@ export class ActorRdfMetadataExtractCardinality extends ActorRdfMetadataExtract 
       }
     `
 
-    console.log('Attempt tp fetch cardinality data using query:', query)
-
-    const bindingsArray: RDF.Bindings[] = await (await this.queryEngine.queryBindings(query, { sources: [store] })).toArray()
+    const bindingsStream = await this.queryEngine.queryBindings(query, { sources: [action.url], lenient: true })
+    const bindingsArray: RDF.Bindings[] = await bindingsStream.toArray()
 
     for (const bindings of bindingsArray) {
+      console.log(bindings)
       const dataset = bindings.get('dataset')
       const property = bindings.get('property')
       const propertyCardinality = bindings.get('propertyCardinality')
@@ -84,6 +98,8 @@ export class ActorRdfMetadataExtractCardinality extends ActorRdfMetadataExtract 
         datasetData.set(property.value, (datasetData.get(property.value) ?? 0) + parseInt(propertyCardinality.value))
       }
     }
+
+    console.log('predicateCardinalitiesByDataset', ActorRdfMetadataExtractCardinality.predicateCardinalitiesByDataset)
   }
 
   private cardinalityDataExistsForUrl(url: string): boolean {
@@ -113,6 +129,7 @@ export interface IActorRdfMetadataExtractCardinalityArgs extends IActorRdfMetada
   actorInitQuery: ActorInitQueryBase
   /**
    * The Dereference RDF mediator
+   * @default {<urn:comunica:default:dereference-rdf/mediators#main>}
    */
   mediatorDereferenceRdf: MediatorDereferenceRdf
 }

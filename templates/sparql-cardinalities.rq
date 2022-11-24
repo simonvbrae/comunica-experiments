@@ -1,0 +1,8 @@
+PREFIX void: <http://rdfs.org/ns/void#>
+
+SELECT ?dataset ?property ?propertyCardinality WHERE {
+    ?dataset a void:Dataset ;
+        void:propertyPartition [
+            ?property ?propertyCardinality
+        ] .
+}
