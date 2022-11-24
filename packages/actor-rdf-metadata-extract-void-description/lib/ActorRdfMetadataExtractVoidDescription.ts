@@ -44,7 +44,7 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
   public async run(action: IActionRdfMetadataExtract): Promise<IActorRdfMetadataExtractOutput> {
     const quad: RDF.Quad = action.context.getSafe(KeysQueryOperation.operation) as RDF.Quad
     const voidMetadataDescriptions: string[] = await this.extractVoidDatasetDescriptionLinks(action.metadata)
-    if (!this.voidDatasetDescriptionPredicatesSet.has(action.url)) {
+    if (!this.voidDatasetDescriptionPredicatesSet.has(action.url) && voidMetadataDescriptions.length > 0) {
       await Promise.all(voidMetadataDescriptions.map((url) => this.dereferenceVoidDatasetDescription(url, action.context)))
     }
     return this.extractMetadataForPredicate(action.url, quad.predicate.value)
@@ -76,9 +76,11 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
       const propertyCardinality = bindings.get('propertyCardinality')
       if (dataset && property && propertyCardinality) {
         // console.log(dataset.value, property.value, propertyCardinality.value)
-        const datasetData = ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.get(dataset.value) ?? new Map<string, number>()
+        if (!ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.has(dataset.value)) {
+          ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.set(dataset.value, new Map<string, number>())
+        }
+        const datasetData = ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.get(dataset.value) as Map<string, number>
         datasetData.set(property.value, (datasetData.get(property.value) ?? 0) + parseInt(propertyCardinality.value))
-        ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.set(dataset.value, datasetData)
       }
     }
   }
@@ -106,7 +108,6 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
       if (url.startsWith(key) && data.has(predicate)) {
         cardinality.dataset = key
         cardinality.value = data.get(predicate) as number
-        break
       }
     }
     // console.log(url, cardinality.dataset, predicate, cardinality.value)

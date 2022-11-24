@@ -1,13 +1,11 @@
 {
   "queries": [
-    "out-queries/interactive-short-1.sparql",
-    "out-queries/interactive-short-2.sparql",
-    "out-queries/interactive-short-3.sparql"
+    "out-queries/interactive-short-1.sparql"
   ],
   "configs": [
     "templates/config-query-default.json",
     "templates/config-query-void.json"
   ],
-  "repeat": 4,
+  "repeat": 2,
   "results": "templates/results.csv"
 }
