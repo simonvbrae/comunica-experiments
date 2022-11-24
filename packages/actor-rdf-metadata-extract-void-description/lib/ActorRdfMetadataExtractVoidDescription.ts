@@ -30,6 +30,7 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
     if (!action.context.get(KeysInitQuery.query)) {
       throw new Error(`Actor ${this.name} can only work in the context of a query.`)
     }
+    console.log(action.url)
     if (!action.context.get(KeysQueryOperation.operation)) {
       throw new Error(`Actor ${this.name} can only work in the context of a query operation.`)
     }

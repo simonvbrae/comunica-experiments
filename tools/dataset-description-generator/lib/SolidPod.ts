@@ -155,7 +155,7 @@ class SolidPod implements ISolidPod {
       
       const pathIri: URL = new URL(path.replace(this.path, this.url.href).replace(extname(path), '')) // strip '.nq' from the link
 
-      const linkPredicate: NamedNode = predicate ?? predicates.voidDatasetDescription
+      const linkPredicate: NamedNode = predicate ?? predicates.solidVoidDescription
       const profile: NamedNode = factory.namedNode(this.profileIRI.href)
       const target: NamedNode = factory.namedNode(pathIri.href)
 
