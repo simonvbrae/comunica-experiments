@@ -6,7 +6,7 @@ import { DataFactory } from 'rdf-data-factory'
 
 const factory: DataFactory = new DataFactory()
 
-const defaultCustomIndexFile = 'cardinalities.nq'
+const defaultCustomIndexFile = 'voiddescription.nq'
 const defaultCustomIndexFormat = 'application/n-quads'
 const defaultProfileFormat = 'application/n-quads'
 
@@ -21,20 +21,7 @@ const predicates: Record<string, NamedNode> = {
   voidClassPartition: factory.namedNode('http://rdfs.org/ns/void#classPartition'),
   rdfType: factory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
   voidDataset: factory.namedNode('http://rdfs.org/ns/void#Dataset'),
-  voidDatasetDescription: factory.namedNode('http://rdfs.org/ns/void#DatasetDescription')
-}
-
-const defaultPrefixes: Record<string, string> = {
-  'void': 'http://rdfs.org/ns/void#',
-  'xs': 'http://www.w3.org/2001/XMLSchema#',
-  'dbpr': 'http://localhost:3000/dbpedia.org/resource',
-  'ldbct': 'http://localhost:3000/www.ldbc.eu/ldbc_socialnet/1.0/tag',
-  'ldbcv': 'http://localhost:3000/www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/',
-  'solid': 'http://www.w3.org/ns/solid/terms#',
-  'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-  'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
-  'pim': 'http://www.w3.org/ns/pim/space#',
-  'internal': 'http://localhost:3000/internal/'
+  solidVoidDescription: factory.namedNode('http://www.w3.org/ns/solid/terms#voidDescription')
 }
 
 interface ISolidPod {
@@ -54,6 +41,10 @@ class SolidPod implements ISolidPod {
   public readonly path: string
   public readonly url: URL
 
+  private readonly voidDescriptionPath: string
+  private readonly profilePath: string
+  private readonly profileIRI: URL
+
   public readonly subjects: Map<string, number>
   public readonly predicates: Map<string, number>
   public readonly objects: Map<string, number>
@@ -66,26 +57,29 @@ class SolidPod implements ISolidPod {
     this.subjects = new Map<string, number>()
     this.predicates = new Map<string, number>()
     this.objects = new Map<string, number>()
+    this.voidDescriptionPath = join(this.path, 'profile', defaultCustomIndexFile)
+    this.profilePath = join(this.path, 'profile', 'card.nq')
+    this.profileIRI = new URL(`${this.url}/profile/card#me`)
     this.tripleCount = 0
   }
 
   public async process(): Promise<void> {
     try {
       // console.log(`Process: ${this.path}`)
-      await this.calculateCardinalities()
-      await this.serializeCardinalityIndex()
+      await this.recursivelyProcessPod()
+      await this.serializeVoidDescription()
     } catch (err) {
       console.log(`Failed: ${this.path}`, err)
     }
   }
 
-  private async calculateCardinalities(path?: string): Promise<void> {
+  private async recursivelyProcessPod(path?: string): Promise<void> {
     const files: string[] = readdirSync(path ?? this.path)
     for (const file of files) {
       const filePath: string = join(path ?? this.path, file)
       const stats = lstatSync(filePath)
       if (stats.isDirectory()) {
-        await this.calculateCardinalities(filePath)
+        await this.recursivelyProcessPod(filePath)
       } else if (stats.isFile() && basename(filePath) !== defaultCustomIndexFile) { // do not count the custom index files
         await this.processFile(filePath)
       }/* else {
@@ -120,17 +114,16 @@ class SolidPod implements ISolidPod {
     })
   }
 
-  private async serializeCardinalityIndex(): Promise<void> {
+  private async serializeVoidDescription(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
 
-      const outputPath: string = join(this.path, 'profile', defaultCustomIndexFile)
       const dataset: NamedNode = factory.namedNode(this.url.href)
 
-      console.log(`Serialize index to ${outputPath}`)
+      console.log(`Serialize index to ${this.voidDescriptionPath}`)
 
-      if (existsSync(outputPath)) {
+      if (existsSync(this.voidDescriptionPath)) {
         // console.log(`Delete old file at ${outputPath}`)
-        unlinkSync(outputPath)
+        unlinkSync(this.voidDescriptionPath)
       }
 
       const writer: Writer = new Writer({ format: defaultCustomIndexFormat })
@@ -151,7 +144,7 @@ class SolidPod implements ISolidPod {
         if (err) {
           reject(err)
         } else {
-          writeFile(outputPath, result, (err) => err ? reject(err) : this.linkToProfile(outputPath).then(resolve).catch(reject))
+          writeFile(this.voidDescriptionPath, result, (err) => err ? reject(err) : this.linkToProfile(this.voidDescriptionPath).then(resolve).catch(reject))
         }
       })
     })
@@ -159,24 +152,23 @@ class SolidPod implements ISolidPod {
 
   private async linkToProfile(path: string, predicate?: NamedNode): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      const profilePath: string = join(this.path, 'profile', 'card.nq')
-      const profileIri: URL = new URL(`${this.url}/profile/card#me`)
-      const pathIri: URL = new URL(path.replace(this.path, this.url.href).replace(extname(path), ''))
+      
+      const pathIri: URL = new URL(path.replace(this.path, this.url.href).replace(extname(path), '')) // strip '.nq' from the link
 
       const linkPredicate: NamedNode = predicate ?? predicates.voidDatasetDescription
-      const profile: NamedNode = factory.namedNode(profileIri.href)
+      const profile: NamedNode = factory.namedNode(this.profileIRI.href)
       const target: NamedNode = factory.namedNode(pathIri.href)
 
       const parser: Parser = new Parser({ factory: factory })
       const writer: Writer = new Writer({ format: defaultProfileFormat })
 
-      readFile(profilePath, 'utf8', (err, data) => {
+      readFile(this.profilePath, 'utf8', (err, data) => {
         if (err) {
           reject(err)
         } else {
           const quads: Quad[] = parser.parse(data)
-          const existingLinkIndex: number = quads.findIndex(({ subject, predicate, object }: Quad) => subject === profile && predicate === linkPredicate && object === target)
-          if (existingLinkIndex < 0) {
+          const linkExists: boolean = quads.find(({ subject, predicate, object }: Quad) => subject === profile && predicate === linkPredicate && object === target) != null
+          if (!linkExists) {
             quads.push(factory.quad(profile, linkPredicate, target))
           }
           writer.addQuads(quads)
@@ -184,7 +176,7 @@ class SolidPod implements ISolidPod {
             if (err) {
               reject(err)
             } else {
-              writeFile(profilePath, result, (err) => err ? reject(err) : resolve())
+              writeFile(this.profilePath, result, (err) => err ? reject(err) : resolve())
             }
           })
         }

@@ -8,9 +8,9 @@ import { KeysQueryOperation, KeysInitQuery } from '@comunica/context-entries'
 import * as RDF from '@rdfjs/types'
 
 /**
- * An RDF Metadata Extract Actor that attempts to retrieve cardinalities for the data from a custom index.
+ * An RDF Metadata Extract Actor that extracts dataset metadata from their VOID descriptions
  */
-export class ActorRdfMetadataExtractCardinality extends ActorRdfMetadataExtract implements IActorRdfMetadataExtractCardinalityArgs {
+export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtract implements IActorRdfMetadataExtractVoidDescriptionArgs {
 
   public readonly mediatorDereferenceRdf: MediatorDereferenceRdf
   public readonly actorInitQuery: ActorInitQueryBase
@@ -19,7 +19,7 @@ export class ActorRdfMetadataExtractCardinality extends ActorRdfMetadataExtract 
 
   private static readonly predicateCardinalitiesByDataset: Map<string, Map<string, number>> = new Map<string, Map<string, number>>()
 
-  public constructor(args: IActorRdfMetadataExtractCardinalityArgs) {
+  public constructor(args: IActorRdfMetadataExtractVoidDescriptionArgs) {
     super(args)
     this.actorInitQuery = args.actorInitQuery
     this.mediatorDereferenceRdf = args.mediatorDereferenceRdf
@@ -90,20 +90,20 @@ export class ActorRdfMetadataExtractCardinality extends ActorRdfMetadataExtract 
       const property = bindings.get('property')
       const propertyCardinality = bindings.get('propertyCardinality')
       if (dataset && property && propertyCardinality) {
-        let datasetData = ActorRdfMetadataExtractCardinality.predicateCardinalitiesByDataset.get(dataset.value)
+        let datasetData = ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.get(dataset.value)
         if (!datasetData) { // this is unnecessary for all bindings except the first...
           datasetData = new Map<string, number>()
-          ActorRdfMetadataExtractCardinality.predicateCardinalitiesByDataset.set(dataset.value, datasetData)
+          ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.set(dataset.value, datasetData)
         }
         datasetData.set(property.value, (datasetData.get(property.value) ?? 0) + parseInt(propertyCardinality.value))
       }
     }
 
-    console.log('predicateCardinalitiesByDataset', ActorRdfMetadataExtractCardinality.predicateCardinalitiesByDataset)
+    console.log('predicateCardinalitiesByDataset', ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset)
   }
 
   private cardinalityDataExistsForUrl(url: string): boolean {
-    for (const key of ActorRdfMetadataExtractCardinality.predicateCardinalitiesByDataset.keys()) {
+    for (const key of ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.keys()) {
       if (url.startsWith(key)) {
         return true
       }
@@ -112,7 +112,7 @@ export class ActorRdfMetadataExtractCardinality extends ActorRdfMetadataExtract 
   }
 
   private extractCardinalityforPredicate(url: string, predicate: string): number {
-    for (const [key, data] of ActorRdfMetadataExtractCardinality.predicateCardinalitiesByDataset) {
+    for (const [key, data] of ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset) {
       if (url.startsWith(key)) {
         return data.get(predicate) ?? Number.POSITIVE_INFINITY
       }
@@ -121,7 +121,7 @@ export class ActorRdfMetadataExtractCardinality extends ActorRdfMetadataExtract 
   }
 }
 
-export interface IActorRdfMetadataExtractCardinalityArgs extends IActorRdfMetadataExtractArgs {
+export interface IActorRdfMetadataExtractVoidDescriptionArgs extends IActorRdfMetadataExtractArgs {
   /**
    * An init query actor that is used to query shapes.
    * @default {<urn:comunica:default:init/actors#query>}

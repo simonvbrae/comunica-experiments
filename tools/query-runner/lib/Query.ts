@@ -2,15 +2,13 @@ import { QueryEngine, QueryEngineFactory } from '@comunica/query-sparql-link-tra
 import { resolve } from 'node:path'
 import { readFileSync } from 'node:fs'
 
-// import { KeysInitQuery } from '@comunica/context-entries'
-// import { readFileSync } from 'node:fs'
-// import { CliArgsHandlerSolidNoAuth } from './CliArgsHandlerSolidNoAuth'
-
 interface IQueryConfiguration {
   config: string
   query: string
   seed: string
 }
+
+const queryEngineFactory: QueryEngineFactory = new QueryEngineFactory()
 
 function loadConfiguration(path: string): IQueryConfiguration[] {
   const configData: IQueryConfiguration[] = JSON.parse(readFileSync(path, 'utf8')) as IQueryConfiguration[]
@@ -33,8 +31,6 @@ async function executeQuery(configPath: string, queryPath: string, seedUrl: stri
   console.log(`Using configuration at ${configPath}`)
   console.log(`With seed URL: ${seedUrl}`)
 
-  const queryEngineFactory: QueryEngineFactory = new QueryEngineFactory()
-
   // const queries: string[] = readFileSync(queryPath, 'utf8').split('}\n\n').map((query) => query + '}\n')
   const queries: string[] = [
     'SELECT * WHERE { ?s ?p ?o } LIMIT 10'
@@ -50,10 +46,6 @@ async function executeQuery(configPath: string, queryPath: string, seedUrl: stri
     const results = await (await queryEngine.queryBindings(query, {
       sources: [ seedUrl ],
       lenient: false
-      /*
-      [KeysInitQuery.cliArgsHandlers.name]: [
-        new CliArgsHandlerSolidNoAuth()
-      ]*/
     })).toArray()
 
     const approximateEndTime: Date = new Date()

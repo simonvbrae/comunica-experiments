@@ -14,10 +14,7 @@
     "downlevelIteration": true,
     "strict": true,
     "strictFunctionTypes": true,
-    "strictPropertyInitialization": false,
-    "types": [
-      "node"
-    ]
+    "strictPropertyInitialization": false
   },
   "include": [
     "**/lib/*.ts",

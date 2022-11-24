@@ -1,4 +1,4 @@
-import { ISolidPod, SolidPod } from './SolidPod'
+import { type ISolidPod, SolidPod } from './SolidPod'
 import { join } from 'node:path'
 import { readdirSync } from 'node:fs'
 
