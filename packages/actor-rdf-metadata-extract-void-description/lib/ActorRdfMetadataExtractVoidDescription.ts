@@ -4,8 +4,9 @@ import { QueryEngine } from '@comunica/query-sparql-link-traversal-solid'
 import { type IActorTest } from '@comunica/core'
 import { MediatorDereferenceRdf } from '@comunica/bus-dereference-rdf'
 import { KeysQueryOperation, KeysInitQuery } from '@comunica/context-entries'
-// import { storeStream } from 'rdf-store-stream'
+import { storeStream } from 'rdf-store-stream'
 import * as RDF from '@rdfjs/types'
+import { IActionContext } from '@comunica/types'
 
 /**
  * An RDF Metadata Extract Actor that extracts dataset metadata from their VOID descriptions
@@ -14,7 +15,9 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
 
   public readonly mediatorDereferenceRdf: MediatorDereferenceRdf
   public readonly actorInitQuery: ActorInitQueryBase
+  public readonly voidDatasetDescriptionPredicates: string[]
 
+  private readonly voidDatasetDescriptionPredicatesSet: Set<string>
   private readonly queryEngine: QueryEngine // this thing looks weird, nesting Comunica in itself...
 
   private static readonly predicateCardinalitiesByDataset: Map<string, Map<string, number>> = new Map<string, Map<string, number>>()
@@ -23,6 +26,8 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
     super(args)
     this.actorInitQuery = args.actorInitQuery
     this.mediatorDereferenceRdf = args.mediatorDereferenceRdf
+    this.voidDatasetDescriptionPredicates = args.voidDatasetDescriptionPredicates
+    this.voidDatasetDescriptionPredicatesSet = new Set<string>(args.voidDatasetDescriptionPredicates)
     this.queryEngine = new QueryEngine(args.actorInitQuery)
   }
 
@@ -30,46 +35,26 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
     if (!action.context.get(KeysInitQuery.query)) {
       throw new Error(`Actor ${this.name} can only work in the context of a query.`)
     }
-    console.log(action.url)
     if (!action.context.get(KeysQueryOperation.operation)) {
       throw new Error(`Actor ${this.name} can only work in the context of a query operation.`)
     }
     return true
   }
 
-  public run(action: IActionRdfMetadataExtract): Promise<IActorRdfMetadataExtractOutput> {
-    return new Promise((resolve, reject) => {
-      const quad: RDF.Quad = action.context.getSafe(KeysQueryOperation.operation) as RDF.Quad
-      this.getCardinalityForPredicate(action, quad.predicate.value)
-        .then((cardinality) => {
-          resolve({ metadata: { cardinality: { type: 'estimate', value: cardinality } } })
-        })
-        .catch((reason) => {
-          console.log(reason)
-          reject(reason)
-        })
-    })
+  public async run(action: IActionRdfMetadataExtract): Promise<IActorRdfMetadataExtractOutput> {
+    const quad: RDF.Quad = action.context.getSafe(KeysQueryOperation.operation) as RDF.Quad
+    const voidMetadataDescriptions: string[] = await this.extractVoidDatasetDescriptionLinks(action.metadata)
+    if (!this.voidDatasetDescriptionPredicatesSet.has(action.url)) {
+      await Promise.all(voidMetadataDescriptions.map((url) => this.dereferenceVoidDatasetDescription(url, action.context)))
+    }
+    return this.extractMetadataForPredicate(action.url, quad.predicate.value)
   }
 
-  private async getCardinalityForPredicate(action: IActionRdfMetadataExtract, predicate: string): Promise<number> {
-    return new Promise<number>((resolve, reject) => {
-      if (!this.cardinalityDataExistsForUrl(action.url)) {
-        this.retrieveCardinalityDataForDataset(action)
-          .then(() => resolve(this.extractCardinalityforPredicate(action.url, predicate)))
-          .catch((reason) => {
-            console.log(reason)
-            reject(reason)
-          })
-      }
-      resolve(this.extractCardinalityforPredicate(action.url, predicate))
-    })
-  }
+  private async dereferenceVoidDatasetDescription(url: string, context: IActionContext): Promise<void> {
+    // console.log('Attempt to dereference VOID dataset description:', url)
 
-  private async retrieveCardinalityDataForDataset(action: IActionRdfMetadataExtract): Promise<void> {
-    // console.log('Attempt to dereference:', action.url)
-
-    //const response = await this.mediatorDereferenceRdf.mediate({ url: action.url, context: action.context })
-    //const store = await storeStream(response.data)
+    const response = await this.mediatorDereferenceRdf.mediate({ url: url, context: context })
+    const store = await storeStream<RDF.Quad>(response.data)
 
     const query = `
       PREFIX void: <http://rdfs.org/ns/void#>
@@ -82,43 +67,50 @@ export class ActorRdfMetadataExtractVoidDescription extends ActorRdfMetadataExtr
       }
     `
 
-    const bindingsStream = await this.queryEngine.queryBindings(query, { sources: [action.url], lenient: true })
+    const bindingsStream = await this.queryEngine.queryBindings(query, { sources: [store], lenient: false })
     const bindingsArray: RDF.Bindings[] = await bindingsStream.toArray()
 
     for (const bindings of bindingsArray) {
-      console.log(bindings)
       const dataset = bindings.get('dataset')
       const property = bindings.get('property')
       const propertyCardinality = bindings.get('propertyCardinality')
       if (dataset && property && propertyCardinality) {
-        let datasetData = ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.get(dataset.value)
-        if (!datasetData) { // this is unnecessary for all bindings except the first...
-          datasetData = new Map<string, number>()
-          ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.set(dataset.value, datasetData)
-        }
+        // console.log(dataset.value, property.value, propertyCardinality.value)
+        const datasetData = ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.get(dataset.value) ?? new Map<string, number>()
         datasetData.set(property.value, (datasetData.get(property.value) ?? 0) + parseInt(propertyCardinality.value))
+        ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.set(dataset.value, datasetData)
       }
     }
-
-    console.log('predicateCardinalitiesByDataset', ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset)
   }
 
-  private cardinalityDataExistsForUrl(url: string): boolean {
-    for (const key of ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset.keys()) {
-      if (url.startsWith(key)) {
-        return true
-      }
+  private extractVoidDatasetDescriptionLinks(metadata: RDF.Stream): Promise<string[]> {
+    return new Promise<string[]>((resolve, reject) => {
+      const datasetDescriptionLinks: Set<string> = new Set<string>()
+      metadata
+        .on('data', (quad: RDF.Quad) => {
+          if (this.voidDatasetDescriptionPredicatesSet.has(quad.predicate.value)) {
+            datasetDescriptionLinks.add(quad.object.value)
+          }
+        })
+        .on('error', reject)
+        .on('end', () => resolve([...datasetDescriptionLinks.values()]))
+    })
+  }
+
+  private extractMetadataForPredicate(url: string, predicate: string): IActorRdfMetadataExtractOutput {
+    const cardinality: Record<string, string | number> = {
+      type: 'estimate',
+      value: Number.POSITIVE_INFINITY
     }
-    return false
-  }
-
-  private extractCardinalityforPredicate(url: string, predicate: string): number {
     for (const [key, data] of ActorRdfMetadataExtractVoidDescription.predicateCardinalitiesByDataset) {
-      if (url.startsWith(key)) {
-        return data.get(predicate) ?? Number.POSITIVE_INFINITY
+      if (url.startsWith(key) && data.has(predicate)) {
+        cardinality.dataset = key
+        cardinality.value = data.get(predicate) as number
+        break
       }
     }
-    return Number.POSITIVE_INFINITY
+    // console.log(url, cardinality.dataset, predicate, cardinality.value)
+    return { metadata: { cardinality: cardinality } }
   }
 }
 
@@ -129,8 +121,13 @@ export interface IActorRdfMetadataExtractVoidDescriptionArgs extends IActorRdfMe
    */
   actorInitQuery: ActorInitQueryBase
   /**
-   * The Dereference RDF mediator
+   * The Dereference RDF mediator.
    * @default {<urn:comunica:default:dereference-rdf/mediators#main>}
    */
   mediatorDereferenceRdf: MediatorDereferenceRdf
+  /**
+   * The predicates to follow in search of VOID dataset secriptions.
+   * @default {http://www.w3.org/ns/solid/terms#voidDescription}
+   */
+  voidDatasetDescriptionPredicates: string[]
 }

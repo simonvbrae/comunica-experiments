@@ -14,7 +14,10 @@
       },
       "mediatorDereferenceRdf": {
         "@id": "urn:comunica:default:dereference-rdf/mediators#main"
-      }
+      },
+      "voidDatasetDescriptionPredicates": [
+        "http://www.w3.org/ns/solid/terms#voidDescription"
+      ]
     }
   ]
 }

@@ -1,0 +1,11 @@
+averageDuration,config,query,resultBindings,totalExecutions
+681,config-query-default,interactive-short-1-0,1,1
+552,config-query-with-void,interactive-short-1-0,1,1
+163,config-query-default,interactive-short-1-1,1,1
+174,config-query-with-void,interactive-short-1-1,1,1
+157,config-query-default,interactive-short-1-2,1,1
+162,config-query-with-void,interactive-short-1-2,1,1
+813,config-query-default,interactive-short-1-3,1,1
+819,config-query-with-void,interactive-short-1-3,1,1
+457,config-query-default,interactive-short-1-4,1,1
+464,config-query-with-void,interactive-short-1-4,1,1
